@@ -3,7 +3,7 @@ title Диаграмма контейнеров Тёплый дом
 
 top to bottom direction
 
-!include C4_Container.puml
+!include ../c4templates/C4_Container.puml
 
 Person(user, "Пользователь", "Пользователь системы")
 

@@ -1,7 +1,7 @@
 @startuml
 title Диаграмма компонентов Тёплый дом
 
-!include C4_Component.puml
+!include ../c4templates/C4_Component.puml
 
 System(ApiGateway, "API Gateway", "Маршрутизирует трафик между микросервисами")
 
@@ -10,10 +10,8 @@ Container_Boundary(DeviceManagementService, "Служба управления �
     Container(DeviceStateConsumerTasks, "Задачи обновления состояния устройства", "", "")
     Container(DeviceManagementRepository, "Репозиторий", "", "")
 
-    Container(UpdateStateController, "Контроллер обновления состояния", "", "")
-    Container(RelaySwitchingController, "Контроллеры переключения реле", "", "")
-    Container(TargetNumberStateController, "Контроллеры установки целевого значения", "", "")
-    Container(DeviceManagementCommandProducerService, "Сервис отправки команд управления", "", "")
+    Container(UpdateStateController, "Контроллеры изменения состояния", "", "")
+    Container(DeviceManagementKafkaService, "Сервис работы с Kafka", "", "")
 }
 
 Container_Boundary(Device, "Умное устройство") {
@@ -37,24 +35,22 @@ Container(MonitoringDatabase, "База данных", "", "Хранит тел�
 
 Rel(ApiGateway, GetStateController, "Запрашивает текущее состояние устройства")
 Rel(ApiGateway, UpdateStateController, "Запрашивает обновление состояния устройства новыми значениями")
-Rel(ApiGateway, RelaySwitchingController, "Запрашивает переключение реле")
-Rel(ApiGateway, TargetNumberStateController, "Запрашивает установку целевого значения внутренней характеристики")
 Rel(ApiGateway, GetNumberStateController, "Запрашивает актуальную телеметрию")
 
 Rel(GetStateController, DeviceManagementRepository, "Запрашивает текущее состояние устройства")
 Rel(DeviceStateConsumerTasks, DeviceManagementRepository, "Сохраняет актуальное состояние")
-Rel(DeviceStateConsumerTasks, DeviceCurrentStateKafkaTopic, "Чтение изменений текущего состояния устройства")
+Rel(DeviceStateConsumerTasks, DeviceManagementKafkaService, "Чтение изменений текущего состояния устройства")
 Rel(DeviceManagementRepository, DeviceManagementDatabase, "Чтение и запись актуального состояния устройств")
 
-Rel(UpdateStateController, DeviceManagementCommandProducerService, "Вызывает сервис отправки команды управления")
-Rel(RelaySwitchingController, DeviceManagementCommandProducerService, "Вызывает сервис отправки команды управления")
-Rel(TargetNumberStateController, DeviceManagementCommandProducerService, "Вызывает сервис отправки команды управления")
-Rel(DeviceManagementCommandProducerService, DeviceManagementCommandKafkaTopic, "Запись асинхронных запросов на управление устройствами")
+Rel(UpdateStateController, DeviceManagementKafkaService, "Отправка команд управления устройством")
 
 Rel(MonitoringConsumerTasks, MonitoringRepository, "Сохраняет актуальную телеметрию")
-Rel(MonitoringConsumerTasks, TelemetryKafkaTopic, "Считывает телеметрию")
 Rel(GetNumberStateController, MonitoringRepository, "Получает актуальную телеметрию")
 Rel(MonitoringRepository, MonitoringDatabase, "Чтение и запись телеметрии")
+
+Rel(DeviceManagementKafkaService, DeviceCurrentStateKafkaTopic, "Чтение изменений текущего состояния устройства")
+Rel(DeviceManagementKafkaService, DeviceManagementCommandKafkaTopic, "Запись асинхронных запросов на управление устройствами")
+Rel(MonitoringConsumerTasks, TelemetryKafkaTopic, "Считывает телеметрию")
 
 Rel(DeviceController, DeviceCurrentStateKafkaTopic, "Записывает состояния устройства при его изменении")
 Rel(DeviceController, DeviceManagementCommandKafkaTopic, "Считывает команды на управление устройством")

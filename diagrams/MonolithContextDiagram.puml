@@ -3,7 +3,7 @@ title Диаграмма контекста Тёплый дом
 
 top to bottom direction
 
-!include C4_Context.puml
+!include ../c4templates/C4_Context.puml
 
 Person(user, "Пользователь", "Пользователь системы")
 Person(admin, "Инженер", "Инженер, устанавливающий и настраивающий оборудование системы в доме")
