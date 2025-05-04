@@ -1,0 +1,18 @@
+@startuml
+title Диаграмма компонентов Тёплый дом
+
+top to bottom direction
+
+!include C4_Component.puml
+
+Person(user, "Пользователь", "Пользователь системы")
+
+System(WarmHouseSystem, "Система Тёплый дом", "Система управления устройствами")
+
+Container_Boundary(WarmHouseSystem, "Система Тёплый дом") {
+  Container(ApiGateway, "API Gateway", "", "Маршрутизирует трафик между микросервисами")
+}
+
+Rel(user, ApiGateway, "Добавляет устройства, настраивает сценарии, пользуется системой, просматривает телеметрию")
+
+@enduml

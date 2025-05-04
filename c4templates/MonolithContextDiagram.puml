@@ -1,0 +1,16 @@
+@startuml
+title Диаграмма контекста Тёплый дом
+
+top to bottom direction
+
+!include C4_Context.puml
+
+Person(user, "Пользователь", "Пользователь системы")
+Person(admin, "Инженер", "Инженер, устанавливающий и настраивающий оборудование системы в доме")
+
+System(WarmHouseSystem, "Система Тёплый дом", "Система управления устройствами отопления")
+
+Rel(user, WarmHouseSystem, "Пользуется системой")
+Rel(admin,WarmHouseSystem, "Настраивает систему")
+
+@enduml
