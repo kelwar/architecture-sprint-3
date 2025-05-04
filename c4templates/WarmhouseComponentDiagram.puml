@@ -1,18 +1,63 @@
 @startuml
 title Диаграмма компонентов Тёплый дом
 
-top to bottom direction
-
 !include C4_Component.puml
 
-Person(user, "Пользователь", "Пользователь системы")
+System(ApiGateway, "API Gateway", "Маршрутизирует трафик между микросервисами")
 
-System(WarmHouseSystem, "Система Тёплый дом", "Система управления устройствами")
+Container_Boundary(DeviceManagementService, "Служба управления устройствами") {
+    Container(GetStateController, "Контроллер получения состояния", "", "")
+    Container(DeviceStateConsumerTasks, "Задачи обновления состояния устройства", "", "")
+    Container(DeviceManagementRepository, "Репозиторий", "", "")
 
-Container_Boundary(WarmHouseSystem, "Система Тёплый дом") {
-  Container(ApiGateway, "API Gateway", "", "Маршрутизирует трафик между микросервисами")
+    Container(UpdateStateController, "Контроллер обновления состояния", "", "")
+    Container(RelaySwitchingController, "Контроллеры переключения реле", "", "")
+    Container(TargetNumberStateController, "Контроллеры установки целевого значения", "", "")
+    Container(DeviceManagementCommandProducerService, "Сервис отправки команд управления", "", "")
 }
 
-Rel(user, ApiGateway, "Добавляет устройства, настраивает сценарии, пользуется системой, просматривает телеметрию")
+Container_Boundary(Device, "Умное устройство") {
+    Container(DeviceController, "Контроллер устройства", "", "Управляет устройством")
+}
+
+Container_Boundary(MonitoringService, "Служба мониторинга") {
+    Container(MonitoringConsumerTasks, "Задачи обновления телеметрии", "", "")
+    Container(GetNumberStateController, "Контроллеры получения телеметрии", "", "")
+    Container(MonitoringRepository, "Репозиторий", "", "")
+}
+
+Container_Boundary(Kafka, "Kafka") {
+    Container(DeviceCurrentStateKafkaTopic, "Топик состояния устройств", "", "")
+    Container(DeviceManagementCommandKafkaTopic, "Топик команд управления устройствами", "", "")
+    Container(TelemetryKafkaTopic, "Топик телеметрии", "", "")
+}
+
+Container(DeviceManagementDatabase, "База данных", "", "Хранит состояние устройства")
+Container(MonitoringDatabase, "База данных", "", "Хранит телеметрию")
+
+Rel(ApiGateway, GetStateController, "Запрашивает текущее состояние устройства")
+Rel(ApiGateway, UpdateStateController, "Запрашивает обновление состояния устройства новыми значениями")
+Rel(ApiGateway, RelaySwitchingController, "Запрашивает переключение реле")
+Rel(ApiGateway, TargetNumberStateController, "Запрашивает установку целевого значения внутренней характеристики")
+Rel(ApiGateway, GetNumberStateController, "Запрашивает актуальную телеметрию")
+
+Rel(GetStateController, DeviceManagementRepository, "Запрашивает текущее состояние устройства")
+Rel(DeviceStateConsumerTasks, DeviceManagementRepository, "Сохраняет актуальное состояние")
+Rel(DeviceStateConsumerTasks, DeviceCurrentStateKafkaTopic, "Чтение изменений текущего состояния устройства")
+Rel(DeviceManagementRepository, DeviceManagementDatabase, "Чтение и запись актуального состояния устройств")
+
+Rel(UpdateStateController, DeviceManagementCommandProducerService, "Вызывает сервис отправки команды управления")
+Rel(RelaySwitchingController, DeviceManagementCommandProducerService, "Вызывает сервис отправки команды управления")
+Rel(TargetNumberStateController, DeviceManagementCommandProducerService, "Вызывает сервис отправки команды управления")
+Rel(DeviceManagementCommandProducerService, DeviceManagementCommandKafkaTopic, "Запись асинхронных запросов на управление устройствами")
+
+Rel(MonitoringConsumerTasks, MonitoringRepository, "Сохраняет актуальную телеметрию")
+Rel(MonitoringConsumerTasks, TelemetryKafkaTopic, "Считывает телеметрию")
+Rel(GetNumberStateController, MonitoringRepository, "Получает актуальную телеметрию")
+Rel(MonitoringRepository, MonitoringDatabase, "Чтение и запись телеметрии")
+
+Rel(DeviceController, DeviceCurrentStateKafkaTopic, "Записывает состояния устройства при его изменении")
+Rel(DeviceController, DeviceManagementCommandKafkaTopic, "Считывает команды на управление устройством")
+Rel(DeviceController, TelemetryKafkaTopic, "Записывает телеметрию")
 
 @enduml

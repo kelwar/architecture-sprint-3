@@ -10,26 +10,29 @@ Person(user, "Пользователь", "Пользователь систем�
 System(WarmHouseSystem, "Система Тёплый дом", "Система управления устройствами")
 
 Container_Boundary(WarmHouseSystem, "Система Тёплый дом") {
+  Container(WebApplication, "Web Application", "", "Предоставляет пользовательский интерфейс для управления устройствами и мониторинга")
   Container(ApiGateway, "API Gateway", "", "Маршрутизирует трафик между микросервисами")
   Container(AuthenticationService, "Служба аутентификации", "Java", "Обрабатывает запросы авторизации")
   Container(DeviceManagementService, "Служба управления устройствами", "Java", "Управляет умными устройствами")
   Container(DeviceMonitoringService, "Служба мониторинга", "Java", "Мониторинг состояния устройств")
   Container(AuthenticationDatabase, "База данных", "PostgreSQL", "Хранит все данные аутентификации")
-  Container(DeviceDatabase, "База данных", "PostgreSQL", "Хранит все данные устройств")
-  Container(KafkaDeviceManagement, "Kafka", "", "Топик управления устройствами")
-  Container(KafkaMonitoring, "Kafka", "", "Топик мониторинга")
+  Container(DeviceDatabase, "База данных", "PostgreSQL", "Хранит значения управляемых характеристик устройств")
+  Container(Kafka, "Kafka", "", "Шина данных")
   Container(Device, "Устройство", "Умное устройство")
+  Container(MonitoringDatabase, "База данных", "PostgreSQL", "Хранит актуальные значения внутренних характеристики устройств")
 }
 
-Rel(user, ApiGateway, "Добавляет устройства, настраивает сценарии, пользуется системой, просматривает телеметрию")
+Rel(user, WebApplication, "Добавляет устройства, настраивает сценарии, пользуется системой, просматривает телеметрию")
+Rel(WebApplication, ApiGateway, "Общается с системой через запросы к API")
 Rel(ApiGateway, AuthenticationService, "Обрабатывает запросы аутентификации")
 Rel(ApiGateway, DeviceManagementService, "Управляет умными устройствами")
 Rel(ApiGateway, DeviceMonitoringService, "Мониторинг состояния устройств")
 Rel(AuthenticationService, AuthenticationDatabase, "Запросы к БД на чтение")
 Rel(DeviceManagementService, DeviceDatabase, "Запросы к БД на чтение/запись")
-Rel(DeviceManagementService, KafkaDeviceManagement, "Асинхронные запросы на управление устройствами")
-Rel(DeviceMonitoringService, KafkaMonitoring, "Читает актуальные состояния устройств")
-Rel(Device, KafkaDeviceManagement, "Читает запросы на управление")
-Rel(Device, KafkaMonitoring, "Записывает актуальное состояние при изменении")
+Rel(DeviceManagementService, Kafka, "Асинхронные запросы на управление устройствами и чтение изменений состояния")
+Rel(DeviceMonitoringService, Kafka, "Читает актуальные состояния устройств при изменении состояния")
+Rel(Device, Kafka, "Читает запросы на управление")
+Rel(Device, Kafka, "Записывает актуальное состояние при изменении")
+Rel(DeviceMonitoringService, MonitoringDatabase, "Запросы к БД на чтение/запись")
 
 @enduml
