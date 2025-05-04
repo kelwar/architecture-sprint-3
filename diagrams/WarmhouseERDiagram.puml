@@ -1,0 +1,49 @@
+@startuml
+title ER Диаграмма Тёплый дом
+
+!include ../c4templates/C4.puml
+
+entity User {
+    * id : bigint
+    --
+    username : text
+    email : text
+}
+
+entity House {
+    * id : bigint
+    --
+    user_id : bigint
+    name : text
+}
+
+entity DeviceType {
+    * id : bigint
+    --
+    name : text
+}
+
+entity Device {
+    * id : bigint
+    --
+    type_id : bigint
+    house_id : bigint
+    serial_number : text
+    name : text
+    status : boolean
+}
+
+entity Telemetry {
+    * id : bigint
+    --
+    device_id : bigint
+    field_name : text
+    value : numeric
+}
+
+User::id ||--o{ House::user_id
+DeviceType::id ||--o{ Device::type_id
+House::id ||--o{ Device::house_id
+Device::id ||--o{ Telemetry::device_id
+
+@enduml

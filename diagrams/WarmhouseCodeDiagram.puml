@@ -1,0 +1,97 @@
+@startuml
+title Диаграмма кода Службы управления устройствами
+
+!include ../c4templates/C4.puml
+
+interface Valuable {
+    +Double getTargetValue()
+    +void setTargetValue(Double value)
+}
+
+abstract class DeviceState {
+    +void turnOn()
+    +void turnOff()
+}
+
+class HeatingDeviceState {
+    +Boolean isOn
+    +Double targetTemperature
+    +void turnOn()
+    +void turnOff()
+    +Double getTargetValue()
+    +void setTargetValue(Double value)
+}
+
+HeatingDeviceState <|-- DeviceState
+HeatingDeviceState <|.. Valuable
+
+class LightDeviceState {
+    +Boolean isOn
+    +void turnOn()
+    +void turnOff()
+}
+
+LightDeviceState <|-- DeviceState
+
+class GarageDoorsDeviceState {
+    +Boolean isOpen
+    +void turnOn()
+    +void turnOff()
+}
+
+GarageDoorsDeviceState <|-- DeviceState
+
+class Device {
+    +Long id
+    +DeviceType type
+    +String name
+    +DeviceState deviceState
+}
+
+Device "0..*" -- "1" DeviceState : has
+
+class KafkaService {
+    +List<Device> getUpdatedDevices()
+    +void sendCommand(Device device)
+}
+
+KafkaService --> Device
+
+class UpdateStateController {
+    +KafkaService kafkaService
+    +void update(Device device)
+    +void turnOn(Device device)
+    +void turnOff(Device device)
+    +void setTargetValue(Double value)
+}
+
+UpdateStateController --> KafkaService
+UpdateStateController --> Device
+
+class DeviceManagementRepository {
+    +Device get(Long id)
+    +List<Device> getAll()
+    +void save(Device device)
+}
+
+DeviceManagementRepository --> Device
+
+class GetStateController {
+    +DeviceManagementRepository repository
+    +Device get(Long id)
+    +List<Device> getAll()
+}
+
+GetStateController --> DeviceManagementRepository
+GetStateController --> Device
+
+class DeviceStateConsumerTasks {
+    +KafkaService kafkaService
+    +DeviceManagementRepository repository
+    +void update()
+}
+
+DeviceStateConsumerTasks --> KafkaService
+DeviceStateConsumerTasks --> DeviceManagementRepository
+
+@enduml
